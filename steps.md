@@ -68,7 +68,7 @@ psql -h localhost -U poc_telegram_contacts -d poc_telegram_contacts
 ### Step 1: Project Structure Setup
 
 ```bash
-# Create project structure
+# Create project structure (directories already exist)
 mkdir -p frontend backend
 ```
 
@@ -98,7 +98,6 @@ Create root workspace configuration:
   }
 }
 ```
-
 
 #### Environment Variables (.env)
 ```env

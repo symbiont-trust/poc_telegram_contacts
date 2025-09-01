@@ -23,7 +23,7 @@ I want to create a proof of concept application that combines crypto wallet auth
 
 ### Backend:
 - **Framework**: Nest.js with TypeScript
-- **Database**: PostgreSQL for user sessions and JWT token management
+- **Database**: PostgreSQL (local installation) for user sessions and JWT token management
 - **Authentication**: 
   - Crypto wallet signature verification
   - JWT tokens for session management
@@ -45,7 +45,6 @@ poc_telegram_contacts/
 │   ├── package.json
 │   └── nest-cli.json
 ├── package.json              # Root workspace configuration
-├── docker-compose.yml        # PostgreSQL database setup
 ├── .env                      # Environment variables
 └── README.md                 # Project documentation
 ```
@@ -80,7 +79,8 @@ poc_telegram_contacts/
 ## Technical Requirements
 
 - **Node Version**: v22.18.0 (use existing nvm setup)
-- **Database**: PostgreSQL with proper indexing for JWT token lookups
+- **Database**: PostgreSQL (local installation) with proper indexing for JWT token lookups
+- **Database Setup**: Create dedicated user `poc_telegram_contacts` with password `poc_telegram_contacts`
 - **Security**: 
   - Secure JWT token management
   - Proper CORS configuration
@@ -103,19 +103,47 @@ The application should use Telegram's official OAuth2 system:
 - Set up both frontend and backend to run concurrently in development
 - Frontend should run on port 5173 (Vite default)
 - Backend should run on port 3001
-- PostgreSQL should run via Docker Compose
+- PostgreSQL should use local installation with dedicated user setup
+
+## Database Setup Requirements
+
+Before implementing the application, set up PostgreSQL:
+
+```bash
+# Connect to PostgreSQL as superuser
+psql postgres
+
+# Create dedicated user and database
+CREATE USER poc_telegram_contacts WITH PASSWORD 'poc_telegram_contacts';
+CREATE DATABASE poc_telegram_contacts OWNER poc_telegram_contacts;
+
+# Grant necessary permissions
+GRANT ALL PRIVILEGES ON DATABASE poc_telegram_contacts TO poc_telegram_contacts;
+GRANT CREATE ON SCHEMA public TO poc_telegram_contacts;
+GRANT USAGE ON SCHEMA public TO poc_telegram_contacts;
+
+# Exit PostgreSQL
+\q
+
+# Test the connection
+psql -h localhost -U poc_telegram_contacts -d poc_telegram_contacts
+# Should prompt for password: poc_telegram_contacts
+```
+
+This approach avoids Docker dependency and uses a dedicated database user for better security isolation.
 
 ## Generated Steps.md Requirements
 
 The generated steps.md file should:
 1. Include detailed setup for both frontend and backend
 2. Provide code examples for Reown App Kit integration
-3. Include Nest.js setup with PostgreSQL configuration
+3. Include Nest.js setup with local PostgreSQL configuration (no Docker)
 4. Show complete authentication flow implementation
 5. Demonstrate Telegram OAuth2 integration (not Bot API)
 6. Include database schema and JWT token management
 7. Provide error handling and security best practices
 8. Include development and production deployment instructions
+9. Include PostgreSQL user setup commands as Step 0
 
 The steps.md should be comprehensive enough that someone can follow it to build the complete application without additional research.
 

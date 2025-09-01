@@ -1,0 +1,21 @@
+{
+  "name": "telegram-contacts-poc",
+  "version": "1.0.0",
+  "description": "Crypto Wallet + Telegram Contact Retrieval POC",
+  "private": true,
+  "workspaces": ["frontend", "backend"],
+  "scripts": {
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev:backend": "cd backend && npm run dev",
+    "build": "npm run build:frontend && npm run build:backend",
+    "build:frontend": "cd frontend && npm run build", 
+    "build:backend": "cd backend && npm run build",
+    "install:all": "npm install && cd frontend && npm install && cd ../backend && npm install",
+    "db:setup": "psql -h localhost -U poc_telegram_contacts -d poc_telegram_contacts -f backend/src/database/init.sql",
+    "db:reset": "psql -h localhost -U poc_telegram_contacts -d poc_telegram_contacts -c \"DROP SCHEMA public CASCADE; CREATE SCHEMA public; GRANT USAGE ON SCHEMA public TO poc_telegram_contacts; GRANT CREATE ON SCHEMA public TO poc_telegram_contacts;\" && npm run db:setup"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.0"
+  }
+}
