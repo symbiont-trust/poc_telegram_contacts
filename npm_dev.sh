@@ -1,1 +1,0 @@
-source ~/.nvm/nvm.sh && nvm use v22.18.0 && npm run dev

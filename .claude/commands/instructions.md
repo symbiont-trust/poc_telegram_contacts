@@ -1,32 +1,121 @@
 # Instructions
 
-I want to create a proof of concept typescript app using OAuth2 to retrieve a user's contact details from Telegram and display them on a page.  I want the poc to support Telegram's 2FA but for it to be optional.  i.e it needs to support both Telegram users who use 2FA and those users who do not.
+I want to create a proof of concept application that combines crypto wallet authentication with Telegram contact retrieval. The app will have both a frontend and backend component with the following requirements:
 
-For the technology stack, I want to use vite and react.
+## Architecture Overview
 
-I want there to be a material button from mui.com which on clicking triggers the OAuth2 process and retrieves the contacts and displays them on the page.
+**Frontend**: React TypeScript app using Vite + Reown's App Kit for crypto wallet connectivity
+**Backend**: Nest.js application with PostgreSQL database for JWT token management
+**Authentication Flow**: 
+1. Users authenticate using their crypto wallet (MetaMask, WalletConnect, etc.)
+2. Backend verifies wallet signature and creates JWT token stored in PostgreSQL
+3. Authenticated users can then connect their Telegram account via OAuth2
+4. Retrieve and display user's Telegram contacts
 
-I do NOT want you to create a git branch or commit the files but I do want you to come up with a plan and then give me the option to authorise you to generate the code.
+## Technology Stack
 
-I want you to generate the plan to:
+### Frontend:
+- **Framework**: React with TypeScript + Vite
+- **UI Library**: Material-UI (mui.com)
+- **Wallet Integration**: Reown's App Kit (formerly WalletConnect AppKit)
+- **HTTP Client**: Axios for API communication
+- **Routing**: React Router for navigation
 
-<project-dir>/.claude/commands/steps.md
+### Backend:
+- **Framework**: Nest.js with TypeScript
+- **Database**: PostgreSQL for user sessions and JWT token management
+- **Authentication**: 
+  - Crypto wallet signature verification
+  - JWT tokens for session management
+  - Telegram OAuth2 for contact access
+- **Telegram Integration**: Official Telegram OAuth2 (not Bot API)
 
-Basically the steps.md is in the same directory as this instructions.md file and in steps.md you will specify all the steps to create this proof of concept app.  I will then later use claude to generate the code from steps.md.
+## Project Structure
 
-I have included the following shell scripts.  I suggest that you start the scripts yourself instead of me, so you can monitor whether the typescript is compiling without me telling you what the issues are.
+The project should be organized as follows:
 
-The scripts you can copy to the root of the project and use are under the directory:
+```
+poc_telegram_contacts/
+├── frontend/                 # React TypeScript app
+│   ├── src/
+│   ├── package.json
+│   └── vite.config.ts
+├── backend/                  # Nest.js application
+│   ├── src/
+│   ├── package.json
+│   └── nest-cli.json
+├── package.json              # Root workspace configuration
+├── docker-compose.yml        # PostgreSQL database setup
+├── .env                      # Environment variables
+└── README.md                 # Project documentation
+```
 
-<project-dir>/sample_code/shell_scripts
+## Authentication Flow Requirements
 
-Note these scripts make use of both nvm and npm which are already installed. The scripts are using v22.18.0 of node and it is already installed.
+1. **Wallet Authentication**:
+   - User connects crypto wallet via Reown App Kit
+   - Frontend requests wallet signature for authentication message
+   - Backend verifies wallet signature and creates JWT token
+   - JWT token stored in PostgreSQL with user session data
 
-Note that steps.md should include all the information in this instructions.md in better refined steps.
+2. **Telegram OAuth2 Integration**:
+   - Once wallet-authenticated, user can connect Telegram account
+   - Use Telegram's official OAuth2 (Login Widget) - NOT the Bot API approach
+   - Telegram handles 2FA automatically (supports both 2FA and non-2FA users)
+   - Retrieve user's Telegram contacts after successful OAuth2
 
-Note that I want the react projects contents to be immediately under the project directory and not under a sub folder.  This means the commands for creating the vite project need to be the correct ones and take take the desired directory structure into account.  This itself should be part of the generated steps.md file.
+3. **Session Management**:
+   - JWT tokens managed in PostgreSQL database
+   - Secure session handling with token refresh capabilities
+   - Logout functionality to invalidate tokens
 
-Basically the generated steps.md should be an inproved version of instructions.md.
+## User Interface Requirements
 
-In order to better understand how to retrieve contacts from Telegram you will need to do some research.  Make sure that you are not looking at deprecated old cold examples and are instead using the latest Telegram APIs.  The generated steps.md file should explain how the Telegram code should look like.  i.e. it should have code examples in steps.md.  This will help us when I later use the generated steps.md file to generate the code.
+- **Landing Page**: Crypto wallet connection interface using Reown App Kit
+- **Dashboard**: Once authenticated, show user's wallet address and Telegram connection status
+- **Telegram Integration**: Material-UI button to trigger Telegram OAuth2 process
+- **Contacts Display**: Paginated list of retrieved Telegram contacts with search functionality
+- **User Profile**: Display connected wallet address and Telegram user information
+
+## Technical Requirements
+
+- **Node Version**: v22.18.0 (use existing nvm setup)
+- **Database**: PostgreSQL with proper indexing for JWT token lookups
+- **Security**: 
+  - Secure JWT token management
+  - Proper CORS configuration
+  - Input validation and sanitization
+  - Rate limiting on authentication endpoints
+- **Error Handling**: Comprehensive error handling for wallet connection and Telegram OAuth2 flows
+
+## Telegram Contact Retrieval
+
+The application should use Telegram's official OAuth2 system:
+- **NOT the Bot API approach** (which requires bot creation)
+- Use Telegram Login Widget for web applications
+- Automatically handles 2FA when present
+- Retrieves user profile information and contacts (with privacy limitations explained)
+- Handle Telegram's privacy restrictions gracefully
+
+## Development Environment
+
+- Use the existing shell scripts from `sample_code/shell_scripts/`
+- Set up both frontend and backend to run concurrently in development
+- Frontend should run on port 5173 (Vite default)
+- Backend should run on port 3001
+- PostgreSQL should run via Docker Compose
+
+## Generated Steps.md Requirements
+
+The generated steps.md file should:
+1. Include detailed setup for both frontend and backend
+2. Provide code examples for Reown App Kit integration
+3. Include Nest.js setup with PostgreSQL configuration
+4. Show complete authentication flow implementation
+5. Demonstrate Telegram OAuth2 integration (not Bot API)
+6. Include database schema and JWT token management
+7. Provide error handling and security best practices
+8. Include development and production deployment instructions
+
+The steps.md should be comprehensive enough that someone can follow it to build the complete application without additional research.
 
