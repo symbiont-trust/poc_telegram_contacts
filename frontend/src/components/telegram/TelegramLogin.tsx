@@ -1,71 +1,75 @@
-import React, { useEffect, useRef } from 'react';
-import { Box, Typography, Paper, Alert } from '@mui/material';
-import { TelegramUser } from '../../types/telegram.types';
+import React, { useState } from 'react';
+import { Box, Typography, Paper, Alert, TextField, Button, CircularProgress } from '@mui/material';
+import type { TelegramUser } from '../../types/telegram.types';
+import { api } from '../../services/api';
 
 interface TelegramLoginProps {
   onAuth: (user: TelegramUser) => void;
 }
 
-declare global {
-  interface Window {
-    onTelegramAuth?: (user: TelegramUser) => void;
-  }
-}
-
 export const TelegramLogin: React.FC<TelegramLoginProps> = ({ onAuth }) => {
-  const containerRef = useRef<HTMLDivElement>(null);
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [verificationCode, setVerificationCode] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [step, setStep] = useState<'phone' | 'code' | 'authenticated'>('phone');
+  const [error, setError] = useState<string | null>(null);
+  const [phoneCodeHash, setPhoneCodeHash] = useState<string>('');
 
-  useEffect(() => {
-    // Set up callback
-    window.onTelegramAuth = onAuth;
-
-    // Note: For the POC, we would need an actual Telegram bot token
-    // This would require creating a bot with @BotFather and setting up domain
-    
-    // Mock implementation for demonstration
-    const mockScript = document.createElement('div');
-    mockScript.innerHTML = `
-      <div style="
-        background: #0088cc; 
-        color: white; 
-        padding: 12px 20px; 
-        border-radius: 6px; 
-        text-align: center; 
-        cursor: pointer; 
-        font-family: Arial, sans-serif;
-        font-size: 14px;
-        display: inline-block;
-      " onclick="window.mockTelegramAuth()">
-        📱 Log in via Telegram (Mock)
-      </div>
-    `;
-
-    // Mock auth function for demo
-    (window as any).mockTelegramAuth = () => {
-      const mockUser: TelegramUser = {
-        id: 123456789,
-        first_name: 'Demo',
-        last_name: 'User',
-        username: 'demo_user',
-        photo_url: undefined,
-        auth_date: Math.floor(Date.now() / 1000),
-        hash: 'mock_hash_for_demo'
-      };
-      onAuth(mockUser);
-    };
-
-    if (containerRef.current) {
-      containerRef.current.appendChild(mockScript);
+  const handleSendCode = async () => {
+    if (!phoneNumber.trim()) {
+      setError('Please enter your phone number');
+      return;
     }
 
-    return () => {
-      if (containerRef.current && mockScript.parentNode) {
-        mockScript.parentNode.removeChild(mockScript);
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await api.post('/telegram/send-code', { 
+        phone_number: phoneNumber 
+      });
+      
+      if (response.data.success) {
+        setPhoneCodeHash(response.data.phone_code_hash);
+        setStep('code');
+      } else {
+        setError(response.data.message || 'Failed to send verification code');
       }
-      delete window.onTelegramAuth;
-      delete (window as any).mockTelegramAuth;
-    };
-  }, [onAuth]);
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Failed to send verification code');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyCode = async () => {
+    if (!verificationCode.trim()) {
+      setError('Please enter the verification code');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await api.post('/telegram/sign-in', {
+        phone_number: phoneNumber,
+        phone_code: verificationCode,
+        phone_code_hash: phoneCodeHash
+      });
+      
+      if (response.data.success) {
+        setStep('authenticated');
+        onAuth(response.data.user);
+      } else {
+        setError(response.data.message || 'Invalid verification code');
+      }
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Invalid verification code');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <Paper elevation={2} sx={{ p: 3, mb: 3 }}>
@@ -74,22 +78,81 @@ export const TelegramLogin: React.FC<TelegramLoginProps> = ({ onAuth }) => {
       </Typography>
       
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-        Link your Telegram account to access your contacts. This uses Telegram's 
-        OAuth2 Login Widget for secure authentication.
+        Enter your phone number to authenticate with Telegram and access your contacts.
       </Typography>
 
-      <Alert severity="info" sx={{ mb: 2 }}>
-        <strong>Demo Mode:</strong> This button simulates Telegram authentication. 
-        In production, this would be replaced with a real Telegram Login Widget 
-        that requires a bot token and domain verification.
-      </Alert>
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      )}
 
-      <Box 
-        ref={containerRef} 
-        display="flex" 
-        justifyContent="center" 
-        sx={{ minHeight: 40 }}
-      />
+      {step === 'phone' && (
+        <Box>
+          <TextField
+            fullWidth
+            label="Phone Number"
+            placeholder="+1234567890"
+            value={phoneNumber}
+            onChange={(e) => setPhoneNumber(e.target.value)}
+            disabled={loading}
+            sx={{ mb: 2 }}
+          />
+          <Button
+            variant="contained"
+            onClick={handleSendCode}
+            disabled={loading}
+            fullWidth
+          >
+            {loading ? (
+              <>
+                <CircularProgress size={20} sx={{ mr: 1 }} />
+                Sending Code...
+              </>
+            ) : (
+              'Send Verification Code'
+            )}
+          </Button>
+        </Box>
+      )}
+
+      {step === 'code' && (
+        <Box>
+          <Alert severity="info" sx={{ mb: 2 }}>
+            A verification code has been sent to your Telegram app. Please enter it below.
+          </Alert>
+          <TextField
+            fullWidth
+            label="Verification Code"
+            placeholder="12345"
+            value={verificationCode}
+            onChange={(e) => setVerificationCode(e.target.value)}
+            disabled={loading}
+            sx={{ mb: 2 }}
+          />
+          <Button
+            variant="contained"
+            onClick={handleVerifyCode}
+            disabled={loading}
+            fullWidth
+          >
+            {loading ? (
+              <>
+                <CircularProgress size={20} sx={{ mr: 1 }} />
+                Verifying...
+              </>
+            ) : (
+              'Verify Code'
+            )}
+          </Button>
+        </Box>
+      )}
+
+      {step === 'authenticated' && (
+        <Alert severity="success">
+          Successfully authenticated with Telegram!
+        </Alert>
+      )}
     </Paper>
   );
 };

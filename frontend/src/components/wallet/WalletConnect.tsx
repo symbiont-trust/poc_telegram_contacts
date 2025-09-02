@@ -15,7 +15,7 @@ import { useNavigate } from 'react-router-dom';
 export const WalletConnect: React.FC = () => {
   const { address, isConnected } = useAccount();
   const { open } = useAppKit();
-  const { signMessage } = useSignMessage();
+  const { signMessageAsync } = useSignMessage();
   const { login } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -24,6 +24,7 @@ export const WalletConnect: React.FC = () => {
   const handleSignAndAuth = async () => {
     if (!address) return;
     
+    console.log('Starting sign and auth process...');
     setLoading(true);
     setError(null);
     
@@ -35,22 +36,31 @@ Timestamp: ${Date.now()}
 
 This request will not trigger a blockchain transaction or cost any gas fees.`;
       
-      const signature = await signMessage({ message });
+      console.log('About to call signMessageAsync with:', { message });
+      const signature = await signMessageAsync({ message });
+      console.log('Signature received:', signature);
       
       if (signature) {
+        console.log('Calling login with:', { walletAddress: address, signature, message });
         const result = await login({
           walletAddress: address,
           signature,
           message
         });
+        console.log('Login result:', result);
         
         if (result.success) {
+          console.log('Login successful, navigating to dashboard');
           navigate('/dashboard');
         } else {
+          console.log('Login failed:', result.error);
           setError(result.error || 'Authentication failed');
         }
+      } else {
+        console.log('No signature received');
       }
     } catch (err: any) {
+      console.error('Auth error caught:', err);
       if (err.message?.includes('User rejected')) {
         setError('Signature was rejected. Please try again.');
       } else {
@@ -58,6 +68,7 @@ This request will not trigger a blockchain transaction or cost any gas fees.`;
       }
       console.error('Auth error:', err);
     } finally {
+      console.log('Setting loading to false');
       setLoading(false);
     }
   };

@@ -7,6 +7,19 @@ export class TelegramController {
   constructor(private telegramService: TelegramService) {}
 
   @UseGuards(AuthGuard('jwt'))
+  @Post('send-code')
+  async sendCode(@Body() request: { phone_number: string }) {
+    return await this.telegramService.sendCode(request);
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Post('sign-in')
+  async signIn(@Body() request: { phone_number: string; phone_code: string; phone_code_hash: string }, @Req() req) {
+    const walletAddress = req.user?.wallet_address;
+    return await this.telegramService.signIn(request, walletAddress);
+  }
+
+  @UseGuards(AuthGuard('jwt'))
   @Post('verify-auth')
   async verifyTelegramAuth(@Body() telegramUser: any, @Req() req) {
     const isValid = this.telegramService.verifyTelegramAuth(telegramUser);
@@ -26,16 +39,25 @@ export class TelegramController {
   @UseGuards(AuthGuard('jwt'))
   @Get('contacts')
   async getContacts(@Req() req) {
-    // In a real implementation, you would get the telegram user ID from the database
-    // For now, we'll use a mock telegram user ID
-    const telegramUserId = 123456789;
-    
-    const contacts = await this.telegramService.getContacts(telegramUserId);
-    
-    return {
-      success: true,
-      contacts: contacts,
-      note: 'This is mock data. Real Telegram contact retrieval requires additional setup and user permissions.'
-    };
+    try {
+      const walletAddress = req.user?.wallet_address;
+      if (!walletAddress) {
+        throw new Error('Wallet address not found');
+      }
+
+      const contacts = await this.telegramService.getContactsByWallet(walletAddress);
+      
+      return {
+        success: true,
+        contacts: contacts,
+        note: 'Real Telegram contacts retrieved from your account.'
+      };
+    } catch (error) {
+      return {
+        success: false,
+        contacts: [],
+        error: error.message
+      };
+    }
   }
 }

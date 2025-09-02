@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { api } from '../services/api';
-import { AuthContextType, User, VerifySignatureRequest, AuthResponse } from '../types/auth.types';
+import type { AuthContextType, User, VerifySignatureRequest, AuthResponse } from '../types/auth.types';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 

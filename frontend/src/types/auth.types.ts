@@ -5,15 +5,15 @@ export interface User {
   updated_at: string;
 }
 
-export interface AuthResponse {
-  access_token: string;
-  user: User;
-}
-
 export interface VerifySignatureRequest {
   walletAddress: string;
   signature: string;
   message: string;
+}
+
+export interface AuthResponse {
+  access_token: string;
+  user: User;
 }
 
 export interface AuthContextType {
