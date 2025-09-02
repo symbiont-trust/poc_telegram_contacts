@@ -25,9 +25,9 @@ export class TelegramService {
       .map(key => `${key}=${data[key]}`)
       .join('\n');
     
-    // Create secret key from bot token
+    // Create secret key from API hash (for Login Widget verification)
     const secretKey = createHash('sha256')
-      .update(this.configService.get<string>('TELEGRAM_BOT_TOKEN'))
+      .update(this.configService.get<string>('TELEGRAM_API_HASH'))
       .digest();
     
     // Calculate expected hash

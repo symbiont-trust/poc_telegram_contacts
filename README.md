@@ -64,14 +64,9 @@ psql -h localhost -U poc_telegram_contacts -d poc_telegram_contacts
 
 ### 2. Environment Configuration
 
-Update the root `.env` file with your configuration:
+Create and configure environment files for both backend and frontend:
 
-```bash
-# Copy and edit the environment file
-cp .env.example .env  # if you have one, or edit .env directly
-```
-
-**Required Updates in `.env`:**
+**Backend Environment (`backend/.env`):**
 
 ```env
 # Database Configuration (Local PostgreSQL)
@@ -90,22 +85,17 @@ JWT_EXPIRES_IN=7d
 BACKEND_PORT=3001
 FRONTEND_URL=http://localhost:5173
 
-# Telegram OAuth2 Configuration (for Login Widget)
-# Note: For demo purposes, these are placeholder values
-# In production, create a bot with @BotFather and set domain
-TELEGRAM_BOT_TOKEN=demo_token_for_poc
-TELEGRAM_BOT_USERNAME=demo_bot
-
-# ⚠️  IMPORTANT: Replace with your real Reown project ID
-# Get from: https://cloud.reown.com/
-REOWN_PROJECT_ID=your_real_reown_project_id_here
+# Telegram Login Widget Configuration
+# Get from: https://my.telegram.org/apps (NOT @BotFather)
+TELEGRAM_API_ID=your_telegram_api_id_here
+TELEGRAM_API_HASH=your_telegram_api_hash_here
 ```
 
-**Required Updates in `frontend/.env`:**
+**Frontend Environment (`frontend/.env`):**
 
 ```env
 VITE_BACKEND_URL=http://localhost:3001
-# ⚠️  IMPORTANT: Replace with the same Reown project ID
+# ⚠️  IMPORTANT: Replace with your real Reown project ID from https://cloud.reown.com/
 VITE_REOWN_PROJECT_ID=your_real_reown_project_id_here
 ```
 
@@ -187,10 +177,10 @@ npm run install:all      # Install all workspace dependencies
 
 ```
 poc_telegram_contacts/
-├── .env                          # Root environment variables
 ├── package.json                  # Root workspace configuration
 ├── README.md                     # This file
 ├── backend/
+│   ├── .env                      # Backend environment variables
 │   ├── src/
 │   │   ├── auth/                 # Authentication module
 │   │   ├── telegram/             # Telegram integration
